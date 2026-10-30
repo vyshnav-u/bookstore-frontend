@@ -9,12 +9,22 @@ import axiosInstance from "../api/axiosInstance";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { loginAPI } from "../services/allAPI";
+import { GoogleLogin } from '@react-oauth/google';
+import { jwtDecode } from "jwt-decode";
 
 function Auth({ insideRegister }) {
   const navigate = useNavigate();
 
+
   const [togglePassword, setTogglePassword] = useState(false);
 
+
+  const handleGoogleLogin = async (credentialResponse) => {
+    console.log("Inside Google Login", credentialResponse);
+    const decode = jwtDecode(credentialResponse.credential)
+    console.log(decode);
+    
+  };
   const handleLogin = async (userData) => {
     try {
       console.log("Login data:", userData);
@@ -88,8 +98,8 @@ function Auth({ insideRegister }) {
     validationSchema: Yup.object({
       username: insideRegister
         ? Yup.string()
-            .min(3, "Must be at least 3 characters")
-            .required("Username is required")
+          .min(3, "Must be at least 3 characters")
+          .required("Username is required")
         : Yup.string(),
 
       email: Yup.string()
@@ -239,16 +249,24 @@ function Auth({ insideRegister }) {
 
               {!insideRegister && (
                 <div>
-                  <p className="text-center py-2 text-white/50">
+                  <p className="text-center  py-2 text-white/50">
                     -----or-----
                   </p>
 
-                  <button
-                    type="button"
-                    className="bg-green-600 w-full text-2xl text-amber-50 rounded-md py-1"
-                  >
-                    Google Login
-                  </button>
+
+                  <div className="flex justify-center w-full">
+                    <GoogleLogin className="w-full"
+                      onSuccess={credentialResponse => {
+                        console.log(credentialResponse);
+                        handleGoogleLogin(credentialResponse)
+
+                      }}
+                      onError={() => {
+                        console.log('Login Failed');
+                      }}
+                    />
+                  </div>
+
                 </div>
               )}
 

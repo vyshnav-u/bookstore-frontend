@@ -15,6 +15,9 @@ import AdminSetiings from "./admin/pages/AdminSetiings";
 
 import Pnf from "./pages/Pnf";
 import Footer from "./components/Footer";
+import { ToastContainer } from "react-toastify";
+import PaymentSucess from "./user/pages/PaymentSucess";
+import PaymentFail from "./user/pages/PaymentFail";
 
 
 function App() {
@@ -29,6 +32,8 @@ function App() {
 
         <Route path="/profile/:id" element={<Profile />} />
         <Route path="/books/:id" element={<View />} />
+        <Route path="/succes" element={<PaymentSucess/>} />
+        <Route path="/fail" element={<PaymentFail/>} />
 
         <Route path="/admin" element={<AdminDashboard />} />
         <Route path="/admin/resources" element={<AdminResources />} />
@@ -38,7 +43,7 @@ function App() {
        
       </Routes>
        <Footer/>
-      
+      <ToastContainer/>
     </>
   );
 }
