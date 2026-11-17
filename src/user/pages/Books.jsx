@@ -1,24 +1,24 @@
 
 import React, { useContext, useEffect, useState } from "react";
-import { FaBars, FaSearch } from "react-icons/fa";
-import Header from "../components/Header";
+import {
+  FaSearch,
+  FaArrowRight,
+  FaBookOpen,
+} from "react-icons/fa";
 import { Link } from "react-router-dom";
+import Header from "../components/Header";
 import { getAllBooksAPI } from "../../services/allAPI";
 import { searchContext } from "../../contextAPI/ShareContext";
 
 function Books() {
   const { searchKey, setSearchKey } = useContext(searchContext);
 
-  const [toggle, setToggle] = useState(false);
   const [books, setBooks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-
-  // Filter states
-  const [filterType, setFilterType] = useState("all");
   const [selectedCategory, setSelectedCategory] = useState("");
+  const [refreshKey, setRefreshKey] = useState(0);
 
-  // Fetch books whenever the search text changes
   useEffect(() => {
     let isActive = true;
 
@@ -27,14 +27,9 @@ function Books() {
         setLoading(true);
         setError("");
 
-        // Pass the search text to the backend
         const response = await getAllBooksAPI(searchKey || "");
-
-        const responseData = response?.data;
-
-        const booksData = Array.isArray(responseData)
-          ? responseData
-          : responseData?.data;
+        const data = response?.data;
+        const booksData = Array.isArray(data) ? data : data?.data;
 
         if (!isActive) return;
 
@@ -42,21 +37,16 @@ function Books() {
           setBooks(booksData);
         } else {
           setBooks([]);
-          setError("Unexpected response from the server.");
+          setError("Unexpected response from server.");
         }
       } catch (err) {
         if (!isActive) return;
 
-        console.error("Error fetching books:", err);
-
         setError(
-          err.response?.data?.message ||
-          "Unable to load books. Please try again."
+          err.response?.data?.message || "Unable to load books. Please try again."
         );
       } finally {
-        if (isActive) {
-          setLoading(false);
-        }
+        if (isActive) setLoading(false);
       }
     };
 
@@ -65,228 +55,342 @@ function Books() {
     return () => {
       isActive = false;
     };
-  }, [searchKey]);
+  }, [searchKey, refreshKey]);
 
-  // Get unique categories from the fetched books
   const categories = [
     ...new Set(
-      books
-        .map((book) => book.category?.trim())
-        .filter(Boolean)
+      books.map(book => book.category?.trim()).filter(Boolean)
     ),
   ];
 
-  // Apply the category filter to the search results
-  const filteredBooks =
-    filterType === "category" && selectedCategory
-      ? books.filter(
-          (book) =>
-            book.category?.toLowerCase() ===
-            selectedCategory.toLowerCase()
-        )
-      : books;
+  const filteredBooks = selectedCategory
+    ? books.filter(
+        book =>
+          book.category?.toLowerCase() === selectedCategory.toLowerCase()
+      )
+    : books;
 
-  // Show a fallback image if a cover is missing or invalid
-  const handleImageError = (e) => {
+  const handleImageError = e => {
     e.currentTarget.onerror = null;
     e.currentTarget.src =
-      "https://placehold.co/300x400?text=Book+Cover";
+      "https://placehold.co/300x400/222222/ffffff?text=Book+Cover";
   };
 
   return (
-    <>
+    <div className="min-h-screen bg-black text-white/80">
+
       <Header />
 
-      {/* Search bar */}
-      <div className="px-5 md:px-40 py-6">
-        <div className="relative max-w-2xl mx-auto">
-          <FaSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+      <main className="max-w-7xl mx-auto px-5 md:px-10 py-12 md:py-16">
 
-          <input
-            value={searchKey}
-            onChange={(e) => setSearchKey(e.target.value)}
-            type="text"
-            placeholder="Search books..."
-            className="w-full pl-11 pr-4 py-3 border border-gray-300 rounded-lg outline-none focus:border-blue-800"
-          />
-        </div>
-      </div>
+        <div className="grid grid-cols-1 lg:grid-cols-[280px_minmax(0,1fr)] gap-9 lg:gap-10">
 
-      {/* Filter and book cards */}
-      <div className="md:grid grid-cols-4 p-5 md:px-40 mb-10">
+          {/* LEFT SIDEBAR */}
 
-        {/* Filter section */}
-        <div className="col-span-1">
-          <div className="flex justify-between items-center">
-            <h1 className="text-2xl font-bold">Filter</h1>
+          <aside className="lg:sticky lg:top-8 lg:self-start">
 
-            <button
-              type="button"
-              onClick={() => setToggle(!toggle)}
-              className="font-bold text-2xl md:hidden"
-              aria-label="Toggle filters"
-              aria-expanded={toggle}
-            >
-              <FaBars />
-            </button>
-          </div>
-
-          <div className={toggle ? "block" : "hidden md:block"}>
-
-            {/* Show all search results */}
-            <div className="mt-3">
-              <input
-                type="radio"
-                name="filter"
-                id="no-filter"
-                checked={filterType === "all"}
-                onChange={() => {
-                  setFilterType("all");
-                  setSelectedCategory("");
-                }}
-              />
-
-              <label htmlFor="no-filter" className="ms-3">
-                All
-              </label>
-            </div>
-
-            {/* Filter by category */}
-            <div className="mt-3">
-              <input
-                type="radio"
-                name="filter"
-                id="filter"
-                checked={filterType === "category"}
-                onChange={() => setFilterType("category")}
-              />
-
-              <label htmlFor="filter" className="ms-3">
-                Book Category
-              </label>
-            </div>
-
-            {filterType === "category" && (
-              <div className="mt-3">
-                <label
-                  htmlFor="category-select"
-                  className="block mb-2 text-sm font-medium"
-                >
-                  Select category
-                </label>
-
-                <select
-                  id="category-select"
-                  value={selectedCategory}
-                  onChange={(e) => setSelectedCategory(e.target.value)}
-                  className="w-full p-2 border border-gray-300 rounded bg-white"
-                >
-                  <option value="">All categories</option>
-
-                  {categories.map((category) => (
-                    <option key={category} value={category}>
-                      {category}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Books section */}
-        <div className="col-span-3 mt-5 md:mt-0">
-
-          {loading ? (
-            <p className="text-center py-10">Loading books...</p>
-          ) : error ? (
-            <div className="text-center py-10">
-              <p className="text-red-600 mb-4">{error}</p>
-
-              <button
-                type="button"
-                onClick={() => setSearchKey(searchKey)}
-                className="bg-blue-800 text-white px-4 py-2 rounded"
-              >
-                Try Again
-              </button>
-            </div>
-          ) : filteredBooks.length === 0 ? (
-            <p className="text-center py-10 text-gray-500">
-              {searchKey.trim()
-                ? `No books found for "${searchKey}".`
-                : books.length === 0
-                  ? "No books are available yet."
-                  : "No books found in this category."}
+            <p className="text-[11px] uppercase tracking-[0.25em] text-white/40 mb-6">
+              The Book Museum / Library
             </p>
-          ) : (
-            <>
-              <p className="text-gray-600 mb-4">
-                {filteredBooks.length} book
-                {filteredBooks.length !== 1 ? "s" : ""} found
+
+            <h1 className="font-['Fraunces'] text-4xl md:text-5xl leading-tight text-white/90">
+              The Collection<span className="italic text-white/40">.</span>
+            </h1>
+
+            <p className="text-sm text-white/60 leading-7 mt-5">
+              Explore stories, discover ideas and find your next favourite read.
+              Every book has a world waiting to be discovered.
+            </p>
+
+            {/* Search */}
+
+            <div className="relative mt-8">
+
+              <FaSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-white/40 text-sm" />
+
+              <input
+                type="text"
+                value={searchKey}
+                onChange={e => setSearchKey(e.target.value)}
+                placeholder="Search books or authors..."
+                className="w-full bg-[#151515] border border-white/10 rounded-xl pl-11 pr-4 py-4 text-sm text-white/80 outline-none focus:border-white/40 transition placeholder:text-white/30"
+              />
+
+            </div>
+
+            {/* Categories */}
+
+            <div className="mt-10">
+
+              <div className="flex justify-between items-center mb-6">
+                <p className="text-[10px] uppercase tracking-[0.25em] text-white/40">
+                  Browse categories
+                </p>
+
+                <FaBookOpen className="text-white/30 text-sm" />
+              </div>
+
+              <div className="space-y-5">
+
+                <button
+                  onClick={() => setSelectedCategory("")}
+                  className={`block text-sm transition ${
+                    !selectedCategory
+                      ? "text-white"
+                      : "text-white/50 hover:text-white/80"
+                  }`}
+                >
+                  All books
+                </button>
+
+                {categories.map(category => (
+                  <button
+                    key={category}
+                    onClick={() => setSelectedCategory(category)}
+                    className={`block text-sm transition ${
+                      selectedCategory === category
+                        ? "text-white"
+                        : "text-white/50 hover:text-white/80"
+                    }`}
+                  >
+                    {category}
+                  </button>
+                ))}
+
+              </div>
+
+            </div>
+
+            {/* Book count */}
+
+            <div className="border-t border-white/10 mt-10 pt-5">
+
+              <p className="text-xs text-white/50">
+                {filteredBooks.length} books available
               </p>
 
-              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-                {filteredBooks.map((book) => (
-                  <div
-                    key={book._id}
-                    className="border border-gray-200 rounded p-4 shadow"
-                  >
-                    <img
-                      src={book.imageURL}
-                      alt={book.title || "Book cover"}
-                      onError={handleImageError}
-                      className="w-full h-72 object-contain"
-                    />
+              <p className="text-xs text-white/30 mt-2 leading-6">
+                A good book is a journey you can revisit anytime.
+              </p>
 
-                    <h2 className="text-xl font-bold mt-3">
-                      {book.title}
-                    </h2>
+            </div>
 
-                    <p className="text-gray-600 mt-1">
-                      {book.author}
-                    </p>
+          </aside>
 
-                    {book.category && (
-                      <p className="text-sm text-gray-500 mt-1">
-                        Category: {book.category}
-                      </p>
-                    )}
+          {/* RIGHT SIDE - BOOK COLLECTION */}
 
-                    <div className="flex items-center gap-2 mt-3 mb-4">
-                      {book.discountPrice !== undefined &&
-                      book.discountPrice !== null &&
-                      book.discountPrice !== "" ? (
-                        <>
-                          <span className="font-bold text-lg">
-                            ₹{book.discountPrice}
-                          </span>
+          <section className="min-w-0">
 
-                          <span className="text-gray-500 line-through">
-                            ₹{book.price}
-                          </span>
-                        </>
-                      ) : (
-                        <span className="font-bold text-lg">
-                          ₹{book.price}
-                        </span>
-                      )}
-                    </div>
+            {/* Collection heading */}
 
-                    <Link
-                      to={`/books/${book._id}`}
-                      className="inline-block bg-blue-800 text-white px-4 py-2 rounded hover:bg-blue-900"
-                    >
-                      View Book
-                    </Link>
-                  </div>
-                ))}
+            <div className="flex justify-between items-center mb-8">
+
+              <div>
+                <p className="text-[10px] uppercase tracking-[0.25em] text-white/40 mb-2">
+                  Carefully collected
+                </p>
+
+                <h2 className="font-['Fraunces'] text-2xl md:text-3xl text-white/90">
+                  Explore books
+                </h2>
               </div>
-            </>
-          )}
+
+              <p className="text-xs text-white/40">
+                {filteredBooks.length} results
+              </p>
+
+            </div>
+
+            {/* Loading */}
+
+            {loading ? (
+
+              <div className="text-center py-28 text-sm text-white/50">
+                Loading your collection...
+              </div>
+
+            ) : error ? (
+
+              <div className="text-center py-24">
+
+                <p className="text-sm text-red-400 mb-5">
+                  {error}
+                </p>
+
+                <button
+                  onClick={() => setRefreshKey(prev => prev + 1)}
+                  className="text-sm text-white/80 underline underline-offset-4"
+                >
+                  Try again
+                </button>
+
+              </div>
+
+            ) : filteredBooks.length === 0 ? (
+
+              <div className="text-center py-28 bg-[#111111] rounded-2xl">
+
+                <FaBookOpen className="mx-auto text-3xl text-white/30 mb-5" />
+
+                <h3 className="font-['Fraunces'] text-2xl italic text-white/80">
+                  Nothing found.
+                </h3>
+
+                <p className="text-sm text-white/40 mt-3">
+                  {searchKey.trim()
+                    ? `No results for "${searchKey}".`
+                    : "No books available in this category."}
+                </p>
+
+              </div>
+
+            ) : (
+
+              /* Book grid */
+
+              <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-x-5 md:gap-x-6 gap-y-12">
+
+                {filteredBooks.map((book, index) => (
+
+                  <article
+                    key={book._id}
+                    className="group min-w-0"
+                  >
+
+                    <Link to={`/books/${book._id}`}>
+
+                      {/* Book cover */}
+
+                      <div className="relative aspect-[3/4] bg-[#151515] rounded-2xl overflow-hidden flex items-center justify-center p-5 md:p-7">
+
+                        <img
+                          src={book.imageURL}
+                          alt={book.title || "Book cover"}
+                          onError={handleImageError}
+                          className="w-full h-full object-contain transition duration-700 group-hover:scale-105"
+                        />
+
+                        {book.discountPrice !== undefined &&
+                          book.discountPrice !== null &&
+                          book.discountPrice !== "" && (
+                            <span className="absolute top-3 left-3 bg-white text-black px-3 py-1.5 rounded-full text-[9px] uppercase tracking-widest">
+                              Offer
+                            </span>
+                          )}
+
+                        <span className="absolute bottom-3 right-4 text-[10px] text-white/50">
+                          {String(index + 1).padStart(2, "0")}
+                        </span>
+
+                      </div>
+
+                      {/* Book details */}
+
+                      <div className="pt-4">
+
+                        <div className="flex justify-between items-center gap-2 mb-2">
+
+                          <p className="text-[10px] uppercase tracking-widest text-white/50 truncate">
+                            {book.category || "Book"}
+                          </p>
+
+                          <p className="text-xs text-white/80 whitespace-nowrap">
+                            ₹{book.discountPrice !== undefined &&
+                            book.discountPrice !== null &&
+                            book.discountPrice !== ""
+                              ? book.discountPrice
+                              : book.price}
+                          </p>
+
+                        </div>
+
+                        <h3 className="font-['Fraunces'] text-base md:text-lg leading-snug truncate text-white/90 group-hover:text-white transition">
+                          {book.title}
+                        </h3>
+
+                        <p className="text-xs text-white/50 mt-2 truncate">
+                          {book.author}
+                        </p>
+
+                        {book.discountPrice !== undefined &&
+                          book.discountPrice !== null &&
+                          book.discountPrice !== "" && (
+                            <p className="text-[10px] text-white/30 line-through mt-1">
+                              ₹{book.price}
+                            </p>
+                          )}
+
+                        <div className="flex justify-between items-center border-t border-white/10 mt-4 pt-3">
+
+                          <span className="text-[10px] uppercase tracking-widest text-white/60">
+                            Discover
+                          </span>
+
+                          <FaArrowRight className="text-xs text-white/40 group-hover:translate-x-1 group-hover:text-white/80 transition" />
+
+                        </div>
+
+                      </div>
+
+                    </Link>
+
+                  </article>
+
+                ))}
+
+              </div>
+
+            )}
+
+          </section>
+
         </div>
-      </div>
-    </>
+
+        {/* Bottom section */}
+
+        <section className="mt-24 mb-10 bg-[#111111] rounded-3xl p-8 md:p-12">
+
+          <p className="text-[10px] uppercase tracking-[0.3em] text-white/40 mb-5">
+            A little reminder
+          </p>
+
+          <h2 className="font-['Fraunces'] text-3xl md:text-5xl leading-tight text-white/90 max-w-xl">
+            Between the pages,
+            <span className="italic text-white/40"> find yourself.</span>
+          </h2>
+
+          <p className="text-sm text-white/50 mt-5 leading-7 max-w-md">
+            Take your time. Explore something unfamiliar.
+            Your next favourite story might be just one page away.
+          </p>
+
+          <a
+            href="#top"
+            className="inline-flex items-center gap-3 mt-8 text-xs uppercase tracking-widest text-white/70 hover:text-white transition"
+          >
+            Back to top
+            <FaArrowRight />
+          </a>
+
+        </section>
+
+        {/* Footer */}
+
+        <footer className="border-t border-white/10 py-7 flex justify-between items-center">
+
+          <p className="text-[10px] uppercase tracking-widest text-white/40">
+            The Book Museum
+          </p>
+
+          <p className="text-[10px] text-white/40">
+            Stories worth keeping.
+          </p>
+
+        </footer>
+
+      </main>
+
+    </div>
   );
 }
 

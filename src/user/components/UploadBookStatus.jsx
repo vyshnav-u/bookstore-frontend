@@ -1,18 +1,13 @@
 
 import React, { useEffect, useState } from "react";
+import { FaTrashAlt, FaBookOpen, FaSyncAlt } from "react-icons/fa";
 import { getUserBookAPI, deleteBookAPI } from "../../services/allAPI";
 
 function UploadBookStatus() {
-  // Stores all books uploaded by the logged-in user
   const [userBooks, setUserBooks] = useState([]);
-
-  // Stores loading state while fetching books
   const [loading, setLoading] = useState(true);
-
-  // Stores an error message if an operation fails
   const [error, setError] = useState("");
 
-  // Gets the authentication token from sessionStorage
   const getHeaders = () => {
     const token = sessionStorage.getItem("token");
 
@@ -21,7 +16,6 @@ function UploadBookStatus() {
     };
   };
 
-  // Fetches books uploaded by the logged-in user
   const fetchUserBooks = async () => {
     setLoading(true);
     setError("");
@@ -29,7 +23,6 @@ function UploadBookStatus() {
     try {
       const response = await getUserBookAPI(getHeaders());
 
-      // Supports either an array response or { data: [...] }
       const result = Array.isArray(response.data)
         ? response.data
         : response.data.data;
@@ -47,12 +40,10 @@ function UploadBookStatus() {
     }
   };
 
-  // Fetches books when the component loads
   useEffect(() => {
     fetchUserBooks();
   }, []);
 
-  // Deletes a selected book
   const handleDelete = async (bookId) => {
     const confirmed = window.confirm(
       "Are you sure you want to delete this book?"
@@ -63,7 +54,6 @@ function UploadBookStatus() {
     try {
       await deleteBookAPI(bookId, getHeaders());
 
-      // Removes the deleted book from the screen
       setUserBooks((previousBooks) =>
         previousBooks.filter((book) => book._id !== bookId)
       );
@@ -77,129 +67,189 @@ function UploadBookStatus() {
     }
   };
 
-  // Displays the appropriate status image
-  const getStatusImage = (status) => {
+  const getStatusStyle = (status) => {
     const currentStatus = (status || "pending").toLowerCase();
 
-    const statusImages = {
-      pending:
-        "https://t4.ftcdn.net/jpg/15/42/78/73/360_F_1542787314_EjF9an3UH9Nd8BvShQ6VSKkYgaS0ByuS.png",
-      approved:
-        "https://static.vecteezy.com/system/resources/previews/024/382/871/non_2x/approved-sign-symbol-icon-label-stamp-green-round-design-transparent-background-free-png.png",
-      sold:
-        "https://cdn-icons-png.flaticon.com/512/6188/6188726.png",
+    const statusStyles = {
+      pending: "bg-yellow-500/10 text-yellow-400 border-yellow-500/20",
+      approved: "bg-green-500/10 text-green-400 border-green-500/20",
+      sold: "bg-blue-500/10 text-blue-400 border-blue-500/20",
     };
 
-    return statusImages[currentStatus] || statusImages.pending;
+    return (
+      statusStyles[currentStatus] ||
+      statusStyles.pending
+    );
+  };
+
+  const getBookImage = (book) => {
+    if (book.imageURL) {
+      return book.imageURL;
+    }
+
+    if (book.uploadImages?.[0]) {
+      return `${import.meta.env.VITE_API_BASE_URL}/uploads/${book.uploadImages[0]}`;
+    }
+
+    return "https://placehold.co/400x500/222222/ffffff?text=No+Book+Image";
   };
 
   if (loading) {
     return (
-      <div className="p-10 my-15 shadow rounded text-center">
-        Loading your uploaded books...
+      <div className="bg-[#111111] rounded-2xl border border-white/10 p-12 text-center">
+        <FaSyncAlt className="animate-spin text-white/40 text-xl mx-auto mb-4" />
+        <p className="text-sm text-white/40">
+          Loading your uploaded books...
+        </p>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="p-10 my-15 shadow rounded text-center">
-        <p className="text-red-600">{error}</p>
+      <div className="bg-[#111111] rounded-2xl border border-white/10 p-12 text-center">
+        <p className="text-sm text-red-400">{error}</p>
 
         <button
           onClick={fetchUserBooks}
-          className="mt-4 bg-blue-700 text-white p-2 rounded"
+          className="mt-5 px-5 py-2.5 rounded-full bg-white text-black text-sm hover:bg-white/80 transition"
         >
-          TRY AGAIN
+          Try Again
         </button>
       </div>
     );
   }
 
   return (
-    <div className="p-10 my-15 shadow rounded">
-      <h1 className="text-3xl font-semibold mb-6">
-        My Uploaded Books
-      </h1>
+    <div className="bg-[#111111] rounded-2xl p-5 md:p-8">
+
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+        <div>
+          <p className="text-[10px] uppercase tracking-[0.25em] text-white/35 mb-2">
+            Book Museum / Contributions
+          </p>
+
+          <h2 className="font-['Fraunces'] text-3xl text-white">
+            My Uploaded Books<span className="text-white/40">.</span>
+          </h2>
+
+          <p className="text-xs text-white/40 mt-2">
+            Track and manage the books you've shared.
+          </p>
+        </div>
+
+        <div className="flex items-center gap-2 bg-[#1a1a1a] border border-white/10 rounded-full px-4 py-2.5 w-fit">
+          <FaBookOpen className="text-white/40 text-sm" />
+          <span className="text-sm text-white">
+            {userBooks.length}
+          </span>
+          <span className="text-xs text-white/40">
+            {userBooks.length === 1 ? "Book" : "Books"}
+          </span>
+        </div>
+      </div>
 
       {userBooks.length === 0 ? (
-        <p className="text-center text-gray-500 py-10">
-          You haven't uploaded any books yet.
-        </p>
+        <div className="border border-dashed border-white/10 rounded-2xl py-16 px-5 text-center">
+          <FaBookOpen className="text-3xl text-white/20 mx-auto mb-4" />
+
+          <h3 className="font-['Fraunces'] text-xl text-white/80">
+            No books uploaded yet
+          </h3>
+
+          <p className="text-sm text-white/35 mt-2">
+            Your uploaded books will appear here.
+          </p>
+        </div>
       ) : (
-        userBooks.map((book) => (
-          <div
-            key={book._id}
-            className="p-5 rounded mt-4 bg-blue-100"
-          >
-            <div className="md:grid grid-cols-[3fr_1fr]">
-              {/* Book Details */}
-              <div className="px-4">
-                <h1 className="text-4xl font-semibold">
-                  {book.title}
-                </h1>
+        <div className="space-y-5">
+          {userBooks.map((book) => (
+            <div
+              key={book._id}
+              className="bg-[#171717] border border-white/10 rounded-2xl p-5 md:p-6 hover:border-white/20 transition"
+            >
+              <div className="grid grid-cols-1 md:grid-cols-[1fr_170px] gap-6">
 
-                <h2 className="text-2xl mt-2">
-                  {book.author}
-                </h2>
+                <div className="flex flex-col justify-between">
 
-                <h3 className="text-lg text-blue-700 mt-2">
-                  Discount Price: ₹
-                  {book.discountPrice ?? book.price ?? 0}
-                </h3>
+                  <div>
+                    <div className="flex flex-wrap items-center gap-3 mb-3">
+                      <span
+                        className={`px-3 py-1 rounded-full border text-[10px] uppercase tracking-wider font-medium ${getStatusStyle(book.status)}`}
+                      >
+                        {book.status || "Pending"}
+                      </span>
 
-                <p className="text-justify mt-3">
-                  {book.abstract}
-                </p>
+                      {book.category && (
+                        <span className="text-[10px] uppercase tracking-wider text-white/35">
+                          {book.category}
+                        </span>
+                      )}
+                    </div>
 
-                {/* Current Book Status */}
-                <div className="flex flex-wrap items-center gap-3 my-4">
+                    <h3 className="font-['Fraunces'] text-2xl md:text-3xl text-white">
+                      {book.title}
+                    </h3>
+
+                    <p className="text-sm text-white/45 mt-2">
+                      By {book.author}
+                    </p>
+
+                    <p className="text-sm text-white/55 leading-7 mt-5 line-clamp-3">
+                      {book.abstract}
+                    </p>
+                  </div>
+
+                  <div className="flex flex-wrap items-center justify-between gap-4 mt-6 pt-5 border-t border-white/10">
+
+                    <div>
+                      <p className="text-[10px] uppercase tracking-wider text-white/35 mb-1">
+                        Listed Price
+                      </p>
+
+                      <p className="text-lg text-white font-medium">
+                        ₹{book.discountPrice ?? book.price ?? 0}
+                      </p>
+
+                      {book.discountPrice != null &&
+                        book.price != null &&
+                        Number(book.discountPrice) < Number(book.price) && (
+                          <p className="text-xs text-white/30 line-through">
+                            ₹{book.price}
+                          </p>
+                        )}
+                    </div>
+
+                    <button
+                      onClick={() => handleDelete(book._id)}
+                      className="flex items-center gap-2 px-4 py-2.5 rounded-full border border-red-500/20 text-red-400 text-xs hover:bg-red-500/10 transition"
+                    >
+                      <FaTrashAlt />
+                      Delete Book
+                    </button>
+
+                  </div>
+                </div>
+
+                <div className="h-[220px] md:h-[240px] bg-[#222222] rounded-xl overflow-hidden border border-white/10">
                   <img
-                    className="w-[100px] h-[100px] object-contain"
-                    src={getStatusImage(book.status)}
-                    alt={book.status || "Pending"}
-                    title={book.status || "Pending"}
+                    className="w-full h-full object-contain"
+                    src={getBookImage(book)}
+                    alt={book.title}
+                    onError={(event) => {
+                      event.currentTarget.onerror = null;
+                      event.currentTarget.src =
+                        "https://placehold.co/400x500/222222/ffffff?text=No+Book+Image";
+                    }}
                   />
-
-                  <span className="capitalize font-semibold">
-                    Status: {book.status || "pending"}
-                  </span>
                 </div>
-              </div>
 
-              {/* Book Image and Delete Button */}
-              <div className="px-4 mt-4 md:mt-0">
-                <img
-                  className="w-full max-h-[300px] object-contain rounded"
-                  src={
-                    book.imageURL ||
-                    (book.uploadImages?.[0]
-                      ? `${
-                          import.meta.env.VITE_API_BASE_URL
-                        }/uploads/${book.uploadImages[0]}`
-                      : "https://placehold.co/400x500?text=No+Book+Image")
-                  }
-                  alt={book.title}
-                  onError={(event) => {
-                    event.currentTarget.onerror = null;
-                    event.currentTarget.src =
-                      "https://placehold.co/400x500?text=No+Book+Image";
-                  }}
-                />
-
-                <div className="mt-4 flex justify-end">
-                  <button
-                    onClick={() => handleDelete(book._id)}
-                    className="bg-red-700 hover:bg-red-800 text-white p-2 rounded"
-                  >
-                    DELETE
-                  </button>
-                </div>
               </div>
             </div>
-          </div>
-        ))
+          ))}
+        </div>
       )}
+
     </div>
   );
 }

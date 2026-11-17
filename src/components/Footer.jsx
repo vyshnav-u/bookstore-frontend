@@ -1,77 +1,95 @@
+
 import React from "react";
 import {
-  FaFacebookF,
   FaInstagram,
+  FaFacebookF,
   FaXTwitter,
   FaEnvelope,
-  FaHeart,
-  FaArrowRight,
 } from "react-icons/fa6";
+import { Link } from "react-router-dom";
 
 function Footer() {
   return (
-    <footer className="bg-black text-white px-6 md:px-12 lg:px-20 pt-12 pb-5">
+    <footer className="bg-[#080807] text-[#eee9d9] px-6 md:px-12 lg:px-20 pt-12 pb-6">
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
+      <div className="max-w-7xl mx-auto">
 
-        {/* About Us */}
-        <div>
-          <h2 className="text-xl font-bold mb-6">About US</h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-10 pb-10">
 
-          <p className="text-lg leading-7 text-justify">
-            We believe books are more than just pages — they are windows into
-            new worlds, teachers of wisdom, and companions for life. Our journey
-            began with a passion for storytelling and a mission to make reading
-            accessible, enjoyable, and inspiring for everyone.
-          </p>
-        </div>
+          {/* Brand */}
 
-        {/* Newsletter */}
-        <div>
-          <h2 className="text-xl font-bold mb-6">NEWS LETTER</h2>
+          <div>
+            <h2 className="font-['Fraunces'] text-2xl mb-3">
+              Book Museum.
+            </h2>
 
-          <p className="text-lg mb-6">
-            Stay updated with our latest trends
-          </p>
-
-          <div className="flex max-w-sm">
-            <input
-              type="email"
-              placeholder="E Mail"
-              className="w-full bg-white text-black px-3 py-3 outline-none"
-            />
-
-            <button className="bg-yellow-500 px-4 text-white text-xl">
-              <FaArrowRight />
-            </button>
+            <p className="text-xs leading-7 text-[#aaa58f] max-w-xs">
+              A place for timeless stories, remarkable authors
+              and the beauty of literature.
+            </p>
           </div>
-        </div>
 
-        {/* Follow Us */}
-        <div>
-          <h2 className="text-xl font-bold mb-6">FOLLOW US</h2>
 
-          <p className="text-lg mb-6">Let us be social</p>
+          {/* Navigation */}
 
-          <div className="flex items-center gap-7 text-xl">
-            <FaFacebookF />
-            <FaInstagram />
-            <FaXTwitter />
-            <FaEnvelope />
+          <div>
+            <p className="text-[10px] uppercase tracking-[0.2em] text-[#a69b7d] mb-5">
+              Explore
+            </p>
+
+            <div className="flex flex-col gap-3 text-xs text-[#aaa58f]">
+              <Link to="/" className="hover:text-white transition">Home</Link>
+              <Link to="/books" className="hover:text-white transition">Books</Link>
+              <Link to="/about" className="hover:text-white transition">About Us</Link>
+              <Link to="/contact" className="hover:text-white transition">Contact</Link>
+            </div>
           </div>
+
+
+          {/* Socials */}
+
+          <div>
+            <p className="text-[10px] uppercase tracking-[0.2em] text-[#a69b7d] mb-5">
+              Stay Connected
+            </p>
+
+            <p className="text-xs text-[#aaa58f] mb-5">
+              Follow our journey through literature.
+            </p>
+
+            <div className="flex gap-4 text-sm text-[#aaa58f]">
+              <a href="#" aria-label="Instagram" className="hover:text-white transition">
+                <FaInstagram />
+              </a>
+              <a href="#" aria-label="Facebook" className="hover:text-white transition">
+                <FaFacebookF />
+              </a>
+              <a href="#" aria-label="X" className="hover:text-white transition">
+                <FaXTwitter />
+              </a>
+              <a href="mailto:" aria-label="Email" className="hover:text-white transition">
+                <FaEnvelope />
+              </a>
+            </div>
+          </div>
+
         </div>
 
-      </div>
 
-      {/* Copyright */}
-      <div className="flex justify-center items-center flex-wrap mt-16 text-center text-lg">
-        <span>
-          Copyright © 2026 All rights reserved | This website is made with
-        </span>
+        {/* Bottom */}
 
-        <FaHeart className="mx-1" />
+        <div className="border-t border-[#38352d] pt-5 flex flex-col md:flex-row justify-between items-center gap-3">
 
-        <span>By Luminar Technolab</span>
+          <p className="text-[10px] text-[#777366]">
+            © 2026 Book Museum. All rights reserved.
+          </p>
+
+          <p className="text-[10px] text-[#777366]">
+            A place for stories, always.
+          </p>
+
+        </div>
+
       </div>
 
     </footer>

@@ -32,7 +32,7 @@ function Edit() {
         username: user.username || "",
         role: user.role || "",
         bio: user.bio || "",
-        id: user._id || "",
+        id: user._id || user.id || "",
         picture: "",
       }));
 
@@ -121,14 +121,13 @@ function Edit() {
           ...storedUser,
           username,
           bio,
-          picture:
-            result.data?.picture ||
-            existingPicture,
+          picture: result.data?.picture || existingPicture,
         };
 
         sessionStorage.setItem("user", JSON.stringify(updatedUser));
 
         setExistingPicture(updatedUser.picture);
+
         setUserDetails((prevDetails) => ({
           ...prevDetails,
           password: "",
@@ -148,136 +147,188 @@ function Edit() {
     }
   };
 
+  const inputStyle =
+    "w-full bg-[#171717] border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder:text-white/30 outline-none focus:border-white/40 transition";
+
   return (
     <div>
       <button
         onClick={() => setOffCanvas(true)}
-        className="bg-black text-white px-4 py-2 flex items-center rounded border border-black hover:bg-white hover:text-black"
+        className="flex items-center gap-2 bg-white text-black px-5 py-2.5 rounded-full text-sm hover:bg-white/80 transition"
       >
-        <FaPencilAlt className="me-2" />
-        Edit
+        <FaPencilAlt className="text-xs" />
+        Edit Profile
       </button>
 
       {offCanvas && (
-        <div>
+        <div className="fixed inset-0 z-[100]">
+
           <div
             onClick={() => setOffCanvas(false)}
-            className="fixed inset-0 bg-gray-400/75 z-40"
+            className="absolute inset-0 bg-black/75 backdrop-blur-sm"
           />
 
-          <div className="bg-white h-full w-[360px] max-w-full z-50 fixed top-0 left-0 overflow-y-auto">
-            <div className="bg-black text-white px-4 py-4 flex justify-between items-center">
-              <h1 className="text-xl font-semibold">
-                Update Your Profile
-              </h1>
+          <div className="absolute top-0 right-0 h-full w-full max-w-[440px] bg-[#0d0d0d] border-l border-white/10 overflow-y-auto shadow-2xl">
 
-              <FaX
+            <div className="sticky top-0 z-10 bg-[#0d0d0d]/95 backdrop-blur-md border-b border-white/10 px-6 py-5 flex justify-between items-center">
+              <div>
+                <p className="text-[10px] uppercase tracking-[0.25em] text-white/35 mb-1">
+                  Book Museum / Account
+                </p>
+
+                <h2 className="font-['Fraunces'] text-2xl text-white">
+                  Edit Profile<span className="text-white/40">.</span>
+                </h2>
+              </div>
+
+              <button
                 onClick={() => setOffCanvas(false)}
-                className="cursor-pointer text-xl"
-              />
+                className="w-9 h-9 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-white/60 hover:bg-white hover:text-black transition"
+              >
+                <FaX className="text-sm" />
+              </button>
             </div>
 
-            <div className="p-5">
-              <div className="flex justify-center mb-6">
-                <label className="relative cursor-pointer">
-                  <img
-                    src={
-                      preview ||
-                      existingPicture ||
-                      "https://static.vecteezy.com/system/resources/thumbnails/048/334/475/small/a-person-icon-on-a-transparent-background-png.png"
-                    }
-                    alt="user"
-                    className="w-32 h-32 rounded-full object-cover border"
-                  />
+            <div className="p-6 md:p-8">
 
-                  <div className="absolute bottom-1 right-1 bg-black text-white w-9 h-9 rounded-full flex justify-center items-center">
-                    <FaCamera />
+              <div className="mb-9">
+                <p className="text-xs text-white/40 mb-5">
+                  Update your profile picture
+                </p>
+
+                <div className="flex items-center gap-5">
+                  <label className="relative cursor-pointer group">
+                    <img
+                      src={
+                        preview ||
+                        existingPicture ||
+                        "https://static.vecteezy.com/system/resources/thumbnails/048/334/475/small/a-person-icon-on-a-transparent-background-png.png"
+                      }
+                      alt="User profile"
+                      className="w-24 h-24 rounded-full object-cover border-2 border-white/10 bg-[#222]"
+                    />
+
+                    <div className="absolute inset-0 rounded-full bg-black/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center text-white">
+                      <FaCamera />
+                    </div>
+
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={handlePictureChange}
+                    />
+                  </label>
+
+                  <div>
+                    <p className="text-sm text-white">
+                      Profile Photo
+                    </p>
+                    <p className="text-xs text-white/35 mt-1">
+                      Click the image to upload a new photo
+                    </p>
                   </div>
+                </div>
+              </div>
+
+              <div className="space-y-6">
+
+                <div>
+                  <label className="block text-xs text-white/45 mb-2">
+                    Username
+                  </label>
 
                   <input
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={handlePictureChange}
+                    type="text"
+                    placeholder="Enter your username"
+                    value={userDetails.username}
+                    onChange={(e) =>
+                      setUserDetails({
+                        ...userDetails,
+                        username: e.target.value,
+                      })
+                    }
+                    className={inputStyle}
                   />
-                </label>
+                </div>
+
+                <div>
+                  <label className="block text-xs text-white/45 mb-2">
+                    New Password
+                  </label>
+
+                  <input
+                    type="password"
+                    placeholder="Leave empty to keep current password"
+                    value={userDetails.password}
+                    onChange={(e) =>
+                      setUserDetails({
+                        ...userDetails,
+                        password: e.target.value,
+                      })
+                    }
+                    className={inputStyle}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs text-white/45 mb-2">
+                    Confirm Password
+                  </label>
+
+                  <input
+                    type="password"
+                    placeholder="Confirm your new password"
+                    value={userDetails.cPassword}
+                    onChange={(e) =>
+                      setUserDetails({
+                        ...userDetails,
+                        cPassword: e.target.value,
+                      })
+                    }
+                    className={inputStyle}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs text-white/45 mb-2">
+                    About Me
+                  </label>
+
+                  <textarea
+                    rows="4"
+                    placeholder="Write something about yourself..."
+                    value={userDetails.bio}
+                    onChange={(e) =>
+                      setUserDetails({
+                        ...userDetails,
+                        bio: e.target.value,
+                      })
+                    }
+                    className={`${inputStyle} resize-none`}
+                  />
+                </div>
+
               </div>
 
-              <div className="mb-5">
-                <input
-                  type="text"
-                  placeholder="Username"
-                  value={userDetails.username}
-                  onChange={(e) =>
-                    setUserDetails({
-                      ...userDetails,
-                      username: e.target.value,
-                    })
-                  }
-                  className="w-full border border-gray-300 rounded p-2 outline-none focus:border-black"
-                />
-              </div>
+              <div className="flex gap-3 mt-9 pt-6 border-t border-white/10">
 
-              <div className="mb-5">
-                <input
-                  type="password"
-                  placeholder="New Password (optional)"
-                  value={userDetails.password}
-                  onChange={(e) =>
-                    setUserDetails({
-                      ...userDetails,
-                      password: e.target.value,
-                    })
-                  }
-                  className="w-full border border-gray-300 rounded p-2 outline-none focus:border-black"
-                />
-              </div>
-
-              <div className="mb-5">
-                <input
-                  type="password"
-                  placeholder="Confirm Password"
-                  value={userDetails.cPassword}
-                  onChange={(e) =>
-                    setUserDetails({
-                      ...userDetails,
-                      cPassword: e.target.value,
-                    })
-                  }
-                  className="w-full border border-gray-300 rounded p-2 outline-none focus:border-black"
-                />
-              </div>
-
-              <div className="mb-5">
-                <input
-                  type="text"
-                  placeholder="Bio"
-                  value={userDetails.bio}
-                  onChange={(e) =>
-                    setUserDetails({
-                      ...userDetails,
-                      bio: e.target.value,
-                    })
-                  }
-                  className="w-full border border-gray-300 rounded p-2 outline-none focus:border-black"
-                />
-              </div>
-
-              <div className="flex justify-end gap-3">
                 <button
                   onClick={handleReset}
-                  className="border border-black px-4 py-2 rounded hover:bg-gray-100"
+                  className="flex-1 border border-white/15 text-white/65 rounded-full py-3 text-sm hover:bg-white/5 transition"
                 >
                   Reset
                 </button>
 
                 <button
                   onClick={handleUpdate}
-                  className="bg-black text-white px-4 py-2 rounded border border-black hover:bg-white hover:text-black"
+                  className="flex-1 bg-white text-black rounded-full py-3 text-sm font-medium hover:bg-white/80 transition"
                 >
-                  Update
+                  Save Changes
                 </button>
+
               </div>
+
             </div>
           </div>
         </div>

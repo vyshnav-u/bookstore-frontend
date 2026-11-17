@@ -4,5 +4,45 @@
   box-sizing: border-box;
 
 }
+.fraunces { 
+  font-family: "Fraunces", serif;
+}
 
 @import "tailwindcss";
+
+/* Toast container */
+.Toastify__toast-container {
+  width: 340px;
+  font-family: "Fraunces", serif;
+}
+
+.Toastify__toast-container {
+  width: 280px;
+}
+
+.Toastify__toast {
+  background: #11110f;
+  color: #eee9d9;
+  border: 1px solid #292820;
+  border-radius: 2px;
+  min-height: 48px;
+  padding: 8px 12px;
+  box-shadow: none;
+}
+
+.Toastify__toast-body {
+  font-family: "Fraunces", serif;
+  font-size: 12px;
+  letter-spacing: 0.2px;
+  padding: 0;
+}
+
+.Toastify__progress-bar {
+  height: 1px;
+  background: #a69b7d;
+}
+
+.Toastify__close-button {
+  color: #aaa58f;
+  opacity: 0.6;
+}

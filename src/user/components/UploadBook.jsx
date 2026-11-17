@@ -1,10 +1,9 @@
 
-import React, { useEffect, useState } from "react";
-import { FaPlus } from "react-icons/fa6";
+import React, { useState, useEffect } from "react";
+import { FaPlus, FaCloudUploadAlt, FaImage } from "react-icons/fa";
 import { addBookAPI } from "../../services/allAPI";
 
 function UploadBook() {
-  // Stores all book details entered by the user
   const [bookDetails, setBookDetails] = useState({
     author: "",
     imageURL: "",
@@ -19,16 +18,10 @@ function UploadBook() {
     category: "",
   });
 
-  // Stores the selected additional book images
   const [bookImages, setBookImages] = useState([]);
-
-  // Stores preview URLs for the selected images
   const [imagePreviews, setImagePreviews] = useState([]);
-
-  // Tracks whether the book is being uploaded
   const [loading, setLoading] = useState(false);
 
-  // Updates book details when an input changes
   const handleChange = (e) => {
     const { name, value } = e.target;
 
@@ -38,11 +31,9 @@ function UploadBook() {
     }));
   };
 
-  // Selects additional images and creates their previews
   const handleImagesChange = (e) => {
     const selectedImages = Array.from(e.target.files || []);
 
-    // Allows a maximum of three image files
     const validImages = selectedImages
       .filter((image) => image.type.startsWith("image/"))
       .slice(0, 3);
@@ -51,15 +42,16 @@ function UploadBook() {
       alert("Please select a maximum of 3 images.");
     }
 
-    if (validImages.length !== selectedImages.length &&
-        selectedImages.length <= 3) {
+    if (
+      validImages.length !== selectedImages.length &&
+      selectedImages.length <= 3
+    ) {
       alert("Please select valid image files only.");
     }
 
     setBookImages(validImages);
   };
 
-  // Creates and cleans up preview URLs
   useEffect(() => {
     const previewURLs = bookImages.map((image) =>
       URL.createObjectURL(image)
@@ -72,7 +64,6 @@ function UploadBook() {
     };
   }, [bookImages]);
 
-  // Clears the form and selected images
   const handleReset = () => {
     setBookDetails({
       author: "",
@@ -98,9 +89,7 @@ function UploadBook() {
     }
   };
 
-  // Validates and uploads the book
   const handleUpload = async () => {
-    // Checks whether any book detail is empty
     if (
       Object.values(bookDetails).some(
         (value) => !String(value).trim()
@@ -110,7 +99,6 @@ function UploadBook() {
       return;
     }
 
-    // Checks that the cover URL is valid
     try {
       const coverURL = new URL(bookDetails.imageURL);
 
@@ -123,13 +111,11 @@ function UploadBook() {
       return;
     }
 
-    // Requires at least one additional image
     if (bookImages.length === 0) {
       alert("Please select at least one additional book image.");
       return;
     }
 
-    // Gets the authentication token
     const token = sessionStorage.getItem("token");
 
     if (!token) {
@@ -137,14 +123,12 @@ function UploadBook() {
       return;
     }
 
-    // Creates FormData for text fields and image files
     const formData = new FormData();
 
     Object.entries(bookDetails).forEach(([key, value]) => {
       formData.append(key, value);
     });
 
-    // Uses the field name expected by Multer
     bookImages.forEach((image) => {
       formData.append("uploadImages", image);
     });
@@ -156,7 +140,6 @@ function UploadBook() {
         Authorization: `Bearer ${token}`,
       };
 
-      // Sends book details and image files to the backend
       const response = await addBookAPI(formData, reqHeader);
 
       if (response.status === 200 || response.status === 201) {
@@ -177,207 +160,294 @@ function UploadBook() {
     }
   };
 
+  const inputStyle =
+    "w-full bg-[#171717] border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder:text-white/30 outline-none focus:border-white/40 transition";
+
   return (
-    <div className="bg-gray-100 p-5 px-10 rounded">
-      <h2 className="text-black text-2xl font-bold mb-5">
-        Upload Book
-      </h2>
+    <div className="bg-[#111111] rounded-2xl p-5 md:p-8">
 
-      <div className="md:grid grid-cols-2 gap-10">
-        {/* Left side: book details */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
         <div>
-          <div className="mb-3">
-            <input
-              type="text"
-              name="author"
-              placeholder="Author"
-              value={bookDetails.author}
-              onChange={handleChange}
-              className="w-full p-2 rounded bg-white border border-gray-300"
-            />
-          </div>
+          <p className="text-[10px] uppercase tracking-[0.25em] text-white/35 mb-2">
+            Book Museum / Contribution
+          </p>
 
-          <div className="mb-3">
-            <input
-              type="url"
-              name="imageURL"
-              placeholder="Book Cover Image URL"
-              value={bookDetails.imageURL}
-              onChange={handleChange}
-              className="w-full p-2 rounded bg-white border border-gray-300"
-            />
-          </div>
+          <h2 className="font-['Fraunces'] text-3xl text-white">
+            Upload a Book<span className="text-white/40">.</span>
+          </h2>
 
-          <div className="mb-3">
+          <p className="text-xs text-white/40 mt-2">
+            Share your favourite books with the community.
+          </p>
+        </div>
+
+        <div className="w-11 h-11 rounded-full bg-white/5 border border-white/10 flex items-center justify-center">
+          <FaCloudUploadAlt className="text-white/60 text-lg" />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-[1.2fr_0.8fr] gap-8">
+
+        <div className="space-y-5">
+
+          <div>
+            <label className="block text-xs text-white/45 mb-2">
+              Book Title
+            </label>
             <input
               type="text"
               name="title"
-              placeholder="Book Title"
+              placeholder="Enter book title"
               value={bookDetails.title}
               onChange={handleChange}
-              className="w-full p-2 rounded bg-white border border-gray-300"
-            />
-          </div>
-
-          <div className="mb-3">
-            <input
-              type="number"
-              min="1"
-              name="pages"
-              placeholder="Total Pages"
-              value={bookDetails.pages}
-              onChange={handleChange}
-              className="w-full p-2 rounded bg-white border border-gray-300"
-            />
-          </div>
-
-          <div className="mb-3">
-            <input
-              type="number"
-              min="0"
-              name="price"
-              placeholder="Original Price"
-              value={bookDetails.price}
-              onChange={handleChange}
-              className="w-full p-2 rounded bg-white border border-gray-300"
-            />
-          </div>
-
-          <div className="mb-3">
-            <input
-              type="number"
-              min="0"
-              name="discountPrice"
-              placeholder="Discount Price"
-              value={bookDetails.discountPrice}
-              onChange={handleChange}
-              className="w-full p-2 rounded bg-white border border-gray-300"
-            />
-          </div>
-
-          <div className="mb-3">
-            <textarea
-              name="abstract"
-              placeholder="Abstract"
-              value={bookDetails.abstract}
-              onChange={handleChange}
-              className="w-full p-2 rounded bg-white border border-gray-300"
-            />
-          </div>
-
-          <div className="mb-3">
-            <input
-              type="text"
-              name="publisher"
-              placeholder="Publisher"
-              value={bookDetails.publisher}
-              onChange={handleChange}
-              className="w-full p-2 rounded bg-white border border-gray-300"
-            />
-          </div>
-
-          <div className="mb-3">
-            <input
-              type="text"
-              name="isbn"
-              placeholder="ISBN"
-              value={bookDetails.isbn}
-              onChange={handleChange}
-              className="w-full p-2 rounded bg-white border border-gray-300"
-            />
-          </div>
-
-          <div className="mb-3">
-            <input
-              type="text"
-              name="language"
-              placeholder="Language"
-              value={bookDetails.language}
-              onChange={handleChange}
-              className="w-full p-2 rounded bg-white border border-gray-300"
-            />
-          </div>
-
-          <div className="mb-3">
-            <input
-              type="text"
-              name="category"
-              placeholder="Category"
-              value={bookDetails.category}
-              onChange={handleChange}
-              className="w-full p-2 rounded bg-white border border-gray-300"
-            />
-          </div>
-        </div>
-
-        {/* Right side: cover preview and additional images */}
-        <div>
-          <div className="mb-8 flex flex-col justify-center items-center">
-            <h3 className="text-lg font-semibold mb-3">
-              Book Cover Preview
-            </h3>
-
-            <img
-              className="w-[200px] h-[250px] object-contain rounded"
-              src={
-                bookDetails.imageURL ||
-                "https://placehold.co/200x250?text=Book+Cover"
-              }
-              alt="Book cover preview"
-              onError={(e) => {
-                e.currentTarget.onerror = null;
-                e.currentTarget.src =
-                  "https://placehold.co/200x250?text=Invalid+Image+URL";
-              }}
+              className={inputStyle}
             />
           </div>
 
           <div>
-            <h3 className="text-lg font-semibold mb-4 text-center">
-              Preview of Uploaded Books
-            </h3>
+            <label className="block text-xs text-white/45 mb-2">
+              Author
+            </label>
+            <input
+              type="text"
+              name="author"
+              placeholder="Enter author name"
+              value={bookDetails.author}
+              onChange={handleChange}
+              className={inputStyle}
+            />
+          </div>
 
-            <div className="flex flex-wrap justify-center items-center gap-3">
-              {imagePreviews.map((preview, index) => (
-                <img
-                  key={index}
-                  className="w-[70px] h-[70px] object-cover rounded border"
-                  src={preview}
-                  alt={`Additional book image ${index + 1}`}
-                />
-              ))}
+          <div>
+            <label className="block text-xs text-white/45 mb-2">
+              Book Cover Image URL
+            </label>
+            <input
+              type="url"
+              name="imageURL"
+              placeholder="https://example.com/book-cover.jpg"
+              value={bookDetails.imageURL}
+              onChange={handleChange}
+              className={inputStyle}
+            />
+          </div>
 
-              <label
-                htmlFor="bookUpload"
-                className="cursor-pointer p-3"
-              >
-                <input
-                  type="file"
-                  id="bookUpload"
-                  accept="image/*"
-                  multiple
-                  hidden
-                  onChange={handleImagesChange}
-                />
-
-                <FaPlus className="text-3xl ms-2" />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs text-white/45 mb-2">
+                Total Pages
               </label>
+              <input
+                type="number"
+                min="1"
+                name="pages"
+                placeholder="Pages"
+                value={bookDetails.pages}
+                onChange={handleChange}
+                className={inputStyle}
+              />
             </div>
 
-            <p className="text-gray-500 text-sm text-center mt-3">
-              Select up to 3 additional images.
+            <div>
+              <label className="block text-xs text-white/45 mb-2">
+                Language
+              </label>
+              <input
+                type="text"
+                name="language"
+                placeholder="Language"
+                value={bookDetails.language}
+                onChange={handleChange}
+                className={inputStyle}
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs text-white/45 mb-2">
+                Original Price
+              </label>
+              <input
+                type="number"
+                min="0"
+                name="price"
+                placeholder="Original price"
+                value={bookDetails.price}
+                onChange={handleChange}
+                className={inputStyle}
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs text-white/45 mb-2">
+                Discount Price
+              </label>
+              <input
+                type="number"
+                min="0"
+                name="discountPrice"
+                placeholder="Discount price"
+                value={bookDetails.discountPrice}
+                onChange={handleChange}
+                className={inputStyle}
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-xs text-white/45 mb-2">
+              Publisher
+            </label>
+            <input
+              type="text"
+              name="publisher"
+              placeholder="Enter publisher name"
+              value={bookDetails.publisher}
+              onChange={handleChange}
+              className={inputStyle}
+            />
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs text-white/45 mb-2">
+                ISBN
+              </label>
+              <input
+                type="text"
+                name="isbn"
+                placeholder="ISBN number"
+                value={bookDetails.isbn}
+                onChange={handleChange}
+                className={inputStyle}
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs text-white/45 mb-2">
+                Category
+              </label>
+              <input
+                type="text"
+                name="category"
+                placeholder="Book category"
+                value={bookDetails.category}
+                onChange={handleChange}
+                className={inputStyle}
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-xs text-white/45 mb-2">
+              Book Abstract
+            </label>
+            <textarea
+              name="abstract"
+              rows="5"
+              placeholder="Write a short description about the book..."
+              value={bookDetails.abstract}
+              onChange={handleChange}
+              className={`${inputStyle} resize-none`}
+            />
+          </div>
+
+        </div>
+
+        <div className="space-y-7">
+
+          <div className="bg-[#171717] border border-white/10 rounded-2xl p-5">
+            <div className="flex items-center gap-2 mb-5">
+              <FaImage className="text-white/40" />
+              <h3 className="text-sm text-white">
+                Cover Preview
+              </h3>
+            </div>
+
+            <div className="flex justify-center">
+              <div className="w-[190px] h-[260px] bg-[#222222] rounded-xl overflow-hidden border border-white/10 flex items-center justify-center">
+                <img
+                  className="w-full h-full object-contain"
+                  src={
+                    bookDetails.imageURL ||
+                    "https://placehold.co/200x280/222222/ffffff?text=Book+Cover"
+                  }
+                  alt="Book cover preview"
+                  onError={(e) => {
+                    e.currentTarget.onerror = null;
+                    e.currentTarget.src =
+                      "https://placehold.co/200x280/222222/ffffff?text=Invalid+Image";
+                  }}
+                />
+              </div>
+            </div>
+
+            <p className="text-center text-xs text-white/30 mt-4">
+              Your book cover will appear here.
             </p>
           </div>
+
+          <div className="bg-[#171717] border border-white/10 rounded-2xl p-5">
+            <h3 className="text-sm text-white mb-2">
+              Additional Images
+            </h3>
+
+            <p className="text-xs text-white/40 mb-5">
+              Upload up to 3 additional book images.
+            </p>
+
+            <div className="flex flex-wrap gap-3">
+              {imagePreviews.map((preview, index) => (
+                <div
+                  key={index}
+                  className="w-[75px] h-[85px] rounded-lg overflow-hidden border border-white/10"
+                >
+                  <img
+                    className="w-full h-full object-cover"
+                    src={preview}
+                    alt={`Additional book image ${index + 1}`}
+                  />
+                </div>
+              ))}
+
+              {bookImages.length < 3 && (
+                <label
+                  htmlFor="bookUpload"
+                  className="w-[75px] h-[85px] rounded-lg border border-dashed border-white/20 flex flex-col items-center justify-center cursor-pointer hover:bg-white/5 transition"
+                >
+                  <FaPlus className="text-white/60 mb-2" />
+                  <span className="text-[10px] text-white/40">
+                    Add image
+                  </span>
+
+                  <input
+                    type="file"
+                    id="bookUpload"
+                    accept="image/*"
+                    multiple
+                    hidden
+                    onChange={handleImagesChange}
+                  />
+                </label>
+              )}
+            </div>
+
+            <p className="text-xs text-white/30 mt-4">
+              {bookImages.length} of 3 images selected
+            </p>
+          </div>
+
         </div>
       </div>
 
-      {/* Reset and Upload buttons */}
-      <div className="flex justify-end gap-3 mt-8">
+      <div className="flex flex-col-reverse sm:flex-row justify-end gap-3 mt-9 pt-6 border-t border-white/10">
+
         <button
           type="button"
           onClick={handleReset}
           disabled={loading}
-          className="bg-gray-500 text-white px-4 py-2 rounded disabled:opacity-50"
+          className="px-6 py-3 rounded-full border border-white/15 text-white/65 text-sm hover:bg-white/5 transition disabled:opacity-50"
         >
           Reset
         </button>
@@ -386,10 +456,11 @@ function UploadBook() {
           type="button"
           onClick={handleUpload}
           disabled={loading}
-          className="bg-green-600 text-white px-4 py-2 rounded disabled:opacity-50"
+          className="px-7 py-3 rounded-full bg-white text-black text-sm font-medium hover:bg-white/80 transition disabled:opacity-50"
         >
-          {loading ? "Uploading..." : "Upload"}
+          {loading ? "Uploading..." : "Upload Book"}
         </button>
+
       </div>
     </div>
   );

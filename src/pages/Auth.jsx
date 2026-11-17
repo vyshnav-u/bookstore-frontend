@@ -1,7 +1,6 @@
 
 import React, { useState } from "react";
-import { FaUserAlt, FaEye } from "react-icons/fa";
-import { FaEyeSlash } from "react-icons/fa6";
+import { FaEye, FaEyeSlash, FaArrowRight, FaGoogle } from "react-icons/fa";
 import { Link, useNavigate } from "react-router-dom";
 import { useFormik } from "formik";
 import * as Yup from "yup";
@@ -9,39 +8,33 @@ import axiosInstance from "../api/axiosInstance";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { loginAPI } from "../services/allAPI";
-import { GoogleLogin } from '@react-oauth/google';
+import { GoogleLogin } from "@react-oauth/google";
 import { jwtDecode } from "jwt-decode";
 
 function Auth({ insideRegister }) {
   const navigate = useNavigate();
-
-
   const [togglePassword, setTogglePassword] = useState(false);
 
-
   const handleGoogleLogin = async (credentialResponse) => {
-    console.log("Inside Google Login", credentialResponse);
-    const decode = jwtDecode(credentialResponse.credential)
-    console.log(decode);
-    
+    try {
+      const decoded = jwtDecode(credentialResponse.credential);
+      console.log(decoded);
+    } catch (error) {
+      toast.error("Google login failed");
+    }
   };
+
   const handleLogin = async (userData) => {
     try {
-      console.log("Login data:", userData);
-
       const result = await loginAPI(userData);
-
-      console.log("Login response:", result);
 
       if (result.status === 200) {
         toast.success("Successfully logged in!");
 
         sessionStorage.setItem("token", result.data.token);
+        sessionStorage.setItem("user", JSON.stringify(result.data.user));
 
-        sessionStorage.setItem(
-          "user",
-          JSON.stringify(result.data.user)
-        );
+        window.dispatchEvent(new Event("authChanged"));
 
         setTimeout(() => {
           if (result.data.user.role === "admin") {
@@ -49,41 +42,26 @@ function Auth({ insideRegister }) {
           } else {
             navigate("/");
           }
-        }, 1500);
+        }, 1200);
       }
     } catch (err) {
-      console.log("Login error:", err);
-
-      if (err.response) {
-        toast.error(err.response.data.message || "Login failed");
-      } else {
-        toast.error("Server connection failed");
-      }
+      toast.error(
+        err.response?.data?.message || "Unable to login. Please try again."
+      );
     }
   };
 
   const handleRegister = async (userData) => {
     try {
-      const result = await axiosInstance.post("/register", userData);
+      await axiosInstance.post("/register", userData);
+      toast.success("Registration successful!");
 
-      console.log(result.data);
-
-      toast.success("Registration Successful");
-
-      setTimeout(() => {
-        navigate("/login");
-      }, 1500);
-
+      setTimeout(() => navigate("/login"), 1200);
       return true;
     } catch (err) {
-      console.log(err);
-
-      if (err.response) {
-        toast.error(err.response.data.message || "Registration Failed");
-      } else {
-        toast.error("Server connection failed");
-      }
-
+      toast.error(
+        err.response?.data?.message || "Registration failed"
+      );
       return false;
     }
   };
@@ -98,29 +76,24 @@ function Auth({ insideRegister }) {
     validationSchema: Yup.object({
       username: insideRegister
         ? Yup.string()
-          .min(3, "Must be at least 3 characters")
+          .min(3, "At least 3 characters required")
           .required("Username is required")
         : Yup.string(),
 
       email: Yup.string()
-        .email("Invalid email")
+        .email("Enter a valid email address")
         .required("Email is required"),
 
-      password: Yup.string().required("Password is required"),
+      password: Yup.string()
+        .min(6, "Password must be at least 6 characters")
+        .required("Password is required"),
     }),
 
     onSubmit: async (values, { resetForm }) => {
-      console.log("Form submitted:", values);
-
       if (insideRegister) {
         const success = await handleRegister(values);
-
-        if (success) {
-          resetForm();
-        }
+        if (success) resetForm();
       } else {
-        console.log("LOGIN API CALL");
-
         await handleLogin(values);
       }
     },
@@ -128,176 +101,254 @@ function Auth({ insideRegister }) {
 
   return (
     <>
-      <ToastContainer position="top-center" autoClose={2000} />
+      <ToastContainer
+        position="top-right"
+        autoClose={2500}
+        hideProgressBar={true}
+        closeButton={false}
+        theme="dark"
+      />
 
-      <div className="w-full min-h-screen flex justify-center items-center bg-[url('/login.png')] bg-cover bg-center">
-        <div className="p-10">
-          <h1 className="text-center font-bold text-3xl">
-            BOOKSTORE
-          </h1>
+      <div className="min-h-screen bg-[#080807] text-[#eee9d9] flex items-center justify-center px-5 py-12">
 
-          <div
-            style={{ width: "400px" }}
-            className="bg-blue-900 text-white p-5 py-8 flex rounded justify-center items-center flex-col my-5"
-          >
-            <div
-              style={{
-                width: "80px",
-                height: "80px",
-                borderRadius: "50%",
-              }}
-              className="border mb-5 flex justify-center items-center"
-            >
-              <FaUserAlt className="text-3xl" />
-            </div>
+        <div className="w-full max-w-6xl grid grid-cols-1 md:grid-cols-2 items-center gap-12 md:gap-20">
 
-            <h1 className="text-3xl">
-              {insideRegister ? "Register" : "Login"}
+          {/* Left — Literary Branding */}
+
+          <div className="hidden md:flex flex-col justify-center">
+
+            <Link to="/" className="font-['Fraunces'] text-2xl mb-20">
+              Book Museum.
+            </Link>
+
+            <p className="text-[10px] tracking-[0.3em] uppercase text-[#a69b7d] mb-6">
+              A World Of Literature
+            </p>
+
+            <h1 className="font-['Fraunces'] text-5xl lg:text-7xl leading-[1.15] mb-8">
+              Every Book
+              <br />
+              Begins A
+              <br />
+              <span className="italic text-[#a69b7d]">Journey.</span>
             </h1>
 
-            <form
-              onSubmit={formik.handleSubmit}
-              className="my-5 w-full"
+            <p className="text-sm leading-8 text-[#aaa58f] max-w-md">
+              Discover timeless stories, remarkable authors and
+              extraordinary ideas. Your next literary journey
+              begins with a single page.
+            </p>
+
+            <div className="w-12 h-px bg-[#a69b7d] mt-12 mb-5" />
+
+            <p className="text-[10px] tracking-[0.25em] text-[#777366] uppercase">
+              Preserving Stories · Celebrating Literature
+            </p>
+
+          </div>
+
+
+          {/* Right — Authentication */}
+
+          <div className="w-full max-w-md mx-auto">
+
+            {/* Mobile Branding */}
+
+            <Link
+              to="/"
+              className="md:hidden block text-center font-['Fraunces'] text-2xl mb-12"
             >
+              Book Museum.
+            </Link>
+
+            <div className="mb-9">
+
+              <p className="text-[10px] uppercase tracking-[0.3em] text-[#a69b7d] mb-5">
+                {insideRegister ? "Join Our Library" : "Welcome Back"}
+              </p>
+
+              <h2 className="font-['Fraunces'] text-4xl md:text-5xl mb-4">
+                {insideRegister ? "Create Account." : "Sign In."}
+              </h2>
+
+              <p className="text-xs leading-6 text-[#aaa58f]">
+                {insideRegister
+                  ? "Create an account and begin exploring our literary collection."
+                  : "Sign in to continue your literary journey."}
+              </p>
+
+            </div>
+
+
+            {/* Form */}
+
+            <form onSubmit={formik.handleSubmit} className="space-y-6">
+
               {insideRegister && (
-                <>
+                <div>
+                  <label className="block text-[10px] uppercase tracking-widest text-[#aaa58f] mb-3">
+                    Username
+                  </label>
+
                   <input
-                    className="bg-white p-2 w-full rounded mt-5 text-blue-900"
                     type="text"
-                    placeholder="UserName"
                     name="username"
+                    placeholder="Enter your username"
                     value={formik.values.username}
                     onChange={formik.handleChange}
                     onBlur={formik.handleBlur}
+                    className="w-full bg-transparent border-b border-[#494538] px-3 py-3 text-sm outline-none focus:border-[#c9b98f] transition placeholder:text-[#777366]"
                   />
 
-                  {formik.touched.username &&
-                    formik.errors.username && (
-                      <p className="text-red-400 text-sm mt-1">
-                        {formik.errors.username}
-                      </p>
-                    )}
-                </>
+                  {formik.touched.username && formik.errors.username && (
+                    <p className="text-red-400 text-xs mt-2">
+                      {formik.errors.username}
+                    </p>
+                  )}
+                </div>
               )}
 
-              <input
-                className="bg-white p-2 w-full rounded mt-5 text-blue-900"
-                type="email"
-                placeholder="Email"
-                name="email"
-                value={formik.values.email}
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-              />
 
-              {formik.touched.email &&
-                formik.errors.email && (
-                  <p className="text-red-400 text-sm mt-1">
+              <div>
+                <label className="block text-[10px] uppercase tracking-widest text-[#aaa58f] mb-3">
+                  Email Address
+                </label>
+
+                <input
+                  type="email"
+                  name="email"
+                  placeholder="Enter your email"
+                  value={formik.values.email}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  className="w-full bg-transparent border-b border-[#494538] px-3 py-3 text-sm outline-none focus:border-[#c9b98f] transition placeholder:text-[#777366]"
+                />
+
+                {formik.touched.email && formik.errors.email && (
+                  <p className="text-red-400 text-xs mt-2">
                     {formik.errors.email}
                   </p>
                 )}
-
-              <div className="relative mt-5">
-                <input
-                  className="bg-white p-2 w-full rounded text-blue-900"
-                  type={togglePassword ? "text" : "password"}
-                  placeholder="Password"
-                  name="password"
-                  value={formik.values.password}
-                  onChange={formik.handleChange}
-                  onBlur={formik.handleBlur}
-                />
-
-                {togglePassword ? (
-                  <FaEye
-                    onClick={() => setTogglePassword(false)}
-                    className="text-gray-400 cursor-pointer absolute right-3 top-3"
-                  />
-                ) : (
-                  <FaEyeSlash
-                    onClick={() => setTogglePassword(true)}
-                    className="text-gray-400 cursor-pointer absolute right-3 top-3"
-                  />
-                )}
               </div>
 
-              {formik.touched.password &&
-                formik.errors.password && (
-                  <p className="text-red-400 text-sm mt-1">
+
+              <div>
+                <label className="block text-[10px] uppercase tracking-widest text-[#aaa58f] mb-3">
+                  Password
+                </label>
+
+                <div className="relative">
+
+                  <input
+                    type={togglePassword ? "text" : "password"}
+                    name="password"
+                    placeholder="Enter your password"
+                    value={formik.values.password}
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                    className="w-full bg-transparent border-b border-[#494538] px-3 py-3 pr-10 text-sm outline-none focus:border-[#c9b98f] transition placeholder:text-[#777366]"
+                  />
+
+                  <button
+                    type="button"
+                    onClick={() => setTogglePassword(!togglePassword)}
+                    className="absolute right-1 top-3 text-[#898174] hover:text-white"
+                    aria-label="Toggle password visibility"
+                  >
+                    {togglePassword ? <FaEye /> : <FaEyeSlash />}
+                  </button>
+
+                </div>
+
+                {formik.touched.password && formik.errors.password && (
+                  <p className="text-red-400 text-xs mt-2">
                     {formik.errors.password}
                   </p>
                 )}
-
-              <div className="flex justify-between pt-5">
-                <p>Don't share the password</p>
-
-                {!insideRegister && (
-                  <p className="underline text-blue-300 cursor-pointer">
-                    Forgot Password?
-                  </p>
-                )}
               </div>
 
-              <div className="flex justify-center pt-7">
-                <button
-                  type="submit"
-                  className="bg-green-600 w-full text-2xl text-amber-50 rounded-md py-1"
-                >
-                  {insideRegister ? "Register" : "Log In"}
-                </button>
-              </div>
 
               {!insideRegister && (
-                <div>
-                  <p className="text-center  py-2 text-white/50">
-                    -----or-----
-                  </p>
+                <div className="flex justify-end">
+                  <button
+                    type="button"
+                    className="text-[11px] text-[#a69b7d] hover:text-white transition"
+                  >
+                    Forgot Password?
+                  </button>
+                </div>
+              )}
 
 
-                  <div className="flex justify-center w-full">
-                    <GoogleLogin className="w-full"
-                      onSuccess={credentialResponse => {
-                        console.log(credentialResponse);
-                        handleGoogleLogin(credentialResponse)
+              {/* Submit */}
 
-                      }}
-                      onError={() => {
-                        console.log('Login Failed');
-                      }}
+              <button
+                type="submit"
+                className="w-full flex justify-between items-center bg-[#eee9d9] text-[#171612] px-6 py-4 text-xs uppercase tracking-[0.15em] hover:bg-[#c9b98f] transition duration-300"
+              >
+                {insideRegister ? "Create Account" : "Sign In"}
+                <FaArrowRight />
+              </button>
+
+
+              {/* Google Login */}
+
+              {!insideRegister && (
+                <div className="pt-2">
+
+                  <div className="flex items-center gap-4 mb-5">
+                    <div className="h-px bg-[#38352d] flex-1" />
+                    <span className="text-[10px] text-[#777366] uppercase tracking-widest">
+                      Or continue with
+                    </span>
+                    <div className="h-px bg-[#38352d] flex-1" />
+                  </div>
+
+                  <div className="flex justify-center">
+                    <GoogleLogin
+                      onSuccess={handleGoogleLogin}
+                      onError={() => toast.error("Google login failed")}
+                      theme="filled_black"
+                      shape="rectangular"
+                      width="100%"
                     />
                   </div>
 
                 </div>
               )}
 
-              {insideRegister ? (
-                <p className="text-center pt-3">
-                  Already a user?{" "}
-                  <Link
-                    to="/login"
-                    className="underline text-blue-400"
-                  >
-                    Login
-                  </Link>
-                </p>
-              ) : (
-                <p className="text-center pt-3">
-                  New user?{" "}
-                  <Link
-                    to="/register"
-                    className="underline text-blue-400"
-                  >
-                    Register
-                  </Link>
-                </p>
-              )}
             </form>
+
+
+            {/* Switch Authentication */}
+
+            <div className="mt-9 pt-6 border-t border-[#38352d] text-center">
+
+              <p className="text-xs text-[#aaa58f]">
+
+                {insideRegister
+                  ? "Already have an account?"
+                  : "New to Book Museum?"}
+
+                <Link
+                  to={insideRegister ? "/login" : "/register"}
+                  className="text-[#c9b98f] ml-2 hover:text-white transition"
+                >
+                  {insideRegister ? "Sign In" : "Create Account"}
+                  {" ↗"}
+                </Link>
+
+              </p>
+
+            </div>
+
           </div>
+
         </div>
+
       </div>
     </>
   );
 }
 
 export default Auth;
-
